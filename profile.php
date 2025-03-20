@@ -4,134 +4,184 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Profile Page</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
-            background: linear-gradient(135deg, #E0F7FA, #E1BEE7);
-            min-height: 100vh;
+        * {
             margin: 0;
-            font-family: 'Poppins', sans-serif;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
 
         .profile-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100%;
+            max-width: 800px;
+            margin: 40px auto;
+            perspective: 1000px;
         }
 
         .profile-card {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            position: relative;
-            overflow: hidden;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 30px;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+            display: none; /* Hidden until data loads */
         }
 
-        .profile-pic-wrapper {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 1rem;
+        .profile-card:hover {
+            transform: rotateY(5deg) rotateX(5deg);
         }
 
-        .profile-card img {
-            width: clamp(80px, 20vw, 100px);
-            height: clamp(80px, 20vw, 100px);
+        #profile-pic {
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            border: 4px solid white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             object-fit: cover;
+            display: block;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        .info {
-            text-align: left;
-            margin-top: 1rem;
-        }
-
-        .info label {
-            font-weight: 600;
+        #user-name {
+            text-align: center;
+            font-size: 2rem;
             color: #333;
-            font-size: clamp(12px, 3vw, 14px);
+            margin-bottom: 20px;
         }
 
-        .info input {
+        #profile-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        input {
             width: 100%;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.6);
-            box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.6);
-            color: #333;
-            font-size: clamp(14px, 4vw, 16px);
-            outline: none;
-            transition: 0.3s;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: #f9f9f9;
+        }
+
+        .error {
+            text-align: center;
+            color: #ff0000;
+            padding: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                margin: 20px;
+            }
+
+            .profile-card {
+                padding: 20px;
+            }
+
+            #user-name {
+                font-size: 1.5rem;
+            }
+
+            #profile-pic {
+                width: 120px;
+                height: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #profile-pic {
+                width: 100px;
+                height: 100px;
+            }
+
+            input {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body onload="loadProfile()">
     <div class="profile-container">
-        <div class="profile-card">
-            <div class="profile-pic-wrapper">
-                <img id="profile-pic" src="default-avatar.png" alt="Profile Picture">
-            </div>
-            <h4 id="user-name" class="mt-3 text-dark">Your Name</h4>
-            <div class="info mt-3">
-                <div class="mb-3">
-                    <label>First Name:</label>
-                    <input type="text" id="first_name" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label>Last Name:</label>
-                    <input type="text" id="last_name" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label>Email:</label>
-                    <input type="email" id="email" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label>Phone:</label>
-                    <input type="text" id="mobile" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label>Address:</label>
-                    <input type="text" id="location" class="form-control" disabled>
-                </div>
-            </div>
+        <div class="profile-card" id="profileCard">
+            <img id="profile-pic" src="default-avatar.png" alt="Profile Picture">
+            <h2 id="user-name">Loading...</h2>
+            <form id="profile-form">
+                <label>First Name:</label>
+                <input type="text" id="first_name" readonly>
+                
+                <label>Last Name:</label>
+                <input type="text" id="last_name" readonly>
+                
+                <label>Email:</label>
+                <input type="email" id="email" readonly>
+                
+                <label>Mobile:</label>
+                <input type="text" id="mobile" readonly>
+                
+                <label>Location:</label>
+                <input type="text" id="location" readonly>
+                
+                <label>Member Since:</label>
+                <input type="text" id="created_at" readonly>
+            </form>
         </div>
+        <div class="error" id="errorMessage"></div>
     </div>
 
     <script>
         function loadProfile() {
-            let xhr = new XMLHttpRequest();
-            xhr.open("GET", "api/profile.php?action=get_profile", true);
-            xhr.onload = function () {
-                if (xhr.status == 200) {
-                    let data = JSON.parse(xhr.responseText);
-                    if (!data.success) {
-                        alert(data.error);
-                        window.location.href = "login.php";
+            const profileCard = $("#profileCard");
+            const errorMessage = $("#errorMessage");
+
+            $.ajax({
+                url: "api/profile.php",
+                type: "GET",
+                data: { action: "get_profile" },
+                dataType: "json",
+                success: function(data) {
+                    console.log("Received data:", data);
+
+                    if (!data || !data.success || !data.user) {
+                        profileCard.hide();
+                        errorMessage.show().text(data?.error || "Failed to load profile");
+                        window.location.href = "login.php"; // Redirect to login if not authenticated
                         return;
                     }
-                    document.getElementById("first_name").value = data.first_name || "";
-                    document.getElementById("last_name").value = data.last_name || "";
-                    document.getElementById("email").value = data.email || "";
-                    document.getElementById("mobile").value = data.mobile || "";
-                    document.getElementById("location").value = data.location || "";
-                    document.getElementById("user-name").innerText = `${data.first_name} ${data.last_name}`;
-                    if (data.profile_pic) {
-                        document.getElementById("profile-pic").src = data.profile_pic;
+
+                    let user = data.user;
+                    profileCard.show();
+                    errorMessage.hide();
+
+                    $("#user-name").text(`${user.first_name} ${user.last_name}`);
+                    $("#first_name").val(user.first_name || "N/A");
+                    $("#last_name").val(user.last_name || "N/A");
+                    $("#email").val(user.email || "N/A");
+                    $("#mobile").val(user.mobile || "N/A");
+                    $("#location").val(user.location || "N/A");
+                    $("#created_at").val(user.created_at ? 
+                        new Date(user.created_at).toLocaleDateString('en-US', {
+                            month: 'long', day: 'numeric', year: 'numeric'
+                        }) : "N/A"
+                    );
+
+                    if (user.profile_pic) {
+                        $("#profile-pic").attr("src", user.profile_pic);
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", status, error);
+                    profileCard.hide();
+                    errorMessage.show().text("Error loading profile");
                 }
-            };
-            xhr.send();
+            });
         }
     </script>
 </body>

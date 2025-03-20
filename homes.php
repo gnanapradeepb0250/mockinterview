@@ -258,13 +258,13 @@
             <div class="navbar-end">
                 <div id="sign" class="navbar-item">
                     <div class="buttons">
-                        <a id="sign-up" class="button is-primary" href="category.php">
+                        <a id="sign-up" class="button is-primary" href="tech.php">
                             <strong>Start Practice!</strong>
                         </a>
                         <a id="sign-up" class="button is-primary" href="compile.php">
                             <strong>Let's compile</strong>
                         </a>
-                        <a id="sign-up" class="button is-light" href="profile.php">Go to profile</a>
+                        <!-- <a id="sign-up" class="button is-light" href="profile.php">Go to profile</a> -->
                         <a id="sign-up" class="button is-light" href="feedback.php">Feedback</a>
 
                         <a id="sign-up" class="button is-light" href="logout.php">Logout</a>

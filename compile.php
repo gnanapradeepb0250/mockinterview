@@ -12,13 +12,17 @@
             min-height: 100vh;
             padding: 20px;
             font-family: Arial, sans-serif;
+            /* Disable text selection */
+            -webkit-user-select: none;  /* Chrome, Safari, Opera */
+            -moz-user-select: none;     /* Firefox */
+            -ms-user-select: none;      /* IE/Edge */
+            user-select: none;          /* Standard syntax */
         }
         .compiler-container {
             background: white;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 2rem;
-            /* max-width: 1000px; */
             margin: 0 auto;
             background-image: linear-gradient(to top, #bdc2e8 0%, #bdc2e8 1%, #e6dee9 100%);
         }
@@ -63,7 +67,7 @@
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Disable right-click context menu -->
     <?php include("navbar.php")?>
     <div class="compiler-container">
         <h3 class="mb-3">Online Compiler - Code Ace</h3>
@@ -99,6 +103,58 @@
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/c_cpp");
 
+        // Disable all copy-paste functionality
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        document.addEventListener('cut', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Disable keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+X)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Disable Ace editor-specific commands for copy-paste
+        editor.commands.addCommand({
+            name: 'disableCopy',
+            bindKey: {win: 'Ctrl-C', mac: 'Command-C'},
+            exec: function() { return false; },
+            readOnly: true
+        });
+
+        editor.commands.addCommand({
+            name: 'disablePaste',
+            bindKey: {win: 'Ctrl-V', mac: 'Command-V'},
+            exec: function() { return false; },
+            readOnly: true
+        });
+
+        editor.commands.addCommand({
+            name: 'disableCut',
+            bindKey: {win: 'Ctrl-X', mac: 'Command-X'},
+            exec: function() { return false; },
+            readOnly: true
+        });
+
+        // Disable context menu in editor
+        document.getElementById('editor').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
         let timeLeft = 900; // 15 minutes in seconds
         const timer = setInterval(() => {
             timeLeft--;
@@ -115,43 +171,37 @@
         let questions = [];
 
         function fetchQuestions() {
-    const language = $('#languageSelect').val();
-    
-    $.get('api/getcode_questions.php', {
-        language: language
-    }, function(response) {
-        console.log('Raw response:', response); // Log the raw response for debugging
-        try {
-            // Ensure response is a string and parse it as JSON
-            if (typeof response !== 'string') {
-                response = JSON.stringify(response); // Convert to string if it’s an object
-            }
-            const parsedResponse = JSON.parse(response);
+            const language = $('#languageSelect').val();
             
-            // Handle different response structures (array or object with questions)
-            questions = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse.questions || []);
-            
-            if (questions.length === 0) {
-                throw new Error('No questions found in response');
-            }
+            $.get('api/getcode_questions.php', {
+                language: language
+            }, function(response) {
+                console.log('Raw response:', response);
+                try {
+                    if (typeof response !== 'string') {
+                        response = JSON.stringify(response);
+                    }
+                    const parsedResponse = JSON.parse(response);
+                    questions = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse.questions || []);
+                    
+                    if (questions.length === 0) {
+                        throw new Error('No questions found in response');
+                    }
 
-            // Update question dropdown
-            let options = '<option value="">Select a question</option>';
-            questions.forEach(q => {
-                // Ensure q.id and q.question exist
-                options += `<option value="${q.id || ''}">${q.question || 'Unnamed Question'}</option>`;
+                    let options = '<option value="">Select a question</option>';
+                    questions.forEach(q => {
+                        options += `<option value="${q.id || ''}">${q.question || 'Unnamed Question'}</option>`;
+                    });
+                    $('#questionSelect').html(options);
+                } catch (e) {
+                    console.error('Error parsing questions:', e, 'Raw response:', response);
+                    $('#questionSelect').html('<option value="">Error loading questions</option>');
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error:', textStatus, errorThrown);
+                $('#questionSelect').html('<option value="">Failed to load questions</option>');
             });
-            $('#questionSelect').html(options);
-            $('#questionsContainer').html(''); // Clear any previous content (no list needed)
-        } catch (e) {
-            console.error('Error parsing questions:', e, 'Raw response:', response);
-            $('#questionSelect').html('<option value="">Error loading questions. Check console for details. Response: ' + response + '</option>');
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('AJAX error:', textStatus, errorThrown, jqXHR.responseText);
-        $('#questionSelect').html('<option value="">Failed to load questions. Check server logs. Response: ' + jqXHR.responseText + '</option>');
-    });
-}
 
         function updateEditor() {
             const questionId = $('#questionSelect').val();
@@ -166,83 +216,73 @@
         }
 
         $('#submitCode').click(function() {
-    if (timeLeft <= 0) {
-        $('#outputPanel').text('Time’s up! No further submissions allowed.');
-        return;
-    }
-    const code = editor.getValue();
-    const language = $('#languageSelect').val();
-    const questionId = $('#questionSelect').val() || 1; // Default to first question if none selected
-
-    let formData = new FormData();
-    formData.append('code', code);
-    formData.append('language', language);
-    formData.append('question_id', questionId);
-
-    $.ajax({
-        url: 'api/evaluate_code.php',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(responseText) {
-            console.log('Raw response:', responseText); // Log the raw response for debugging
-            try {
-                // Ensure responseText is a string and valid JSON
-                if (typeof responseText !== 'string') {
-                    responseText = JSON.stringify(responseText); // Convert to string if it’s an object
-                }
-                const result = JSON.parse(responseText);
-                // Ensure result has the expected structure
-                if (!result.success && !result.output && !result.message) {
-                    throw new Error('Invalid response structure: ' + responseText);
-                }
-                let output = `Output: ${result.output || 'No output'}\nMessage: ${result.message || 'No message'}`;
-                if (result.success) {
-                    const usesLogic = checkLogic(code, language);
-                    if (!usesLogic) {
-                        output += '\nWarning: Code appears to use hardcoded output or lacks logical implementation.';
-                    }
-                    $('#outputPanel').text(output).removeClass('text-danger');
-
-                    // Save submission to database
-                    let submissionFormData = new FormData();
-                    submissionFormData.append('code', code);
-                    submissionFormData.append('language', language);
-                    submissionFormData.append('question_id', questionId);
-                    submissionFormData.append('output', result.output || '');
-
-                    $.ajax({
-                        url: 'api/save_submission.php',
-                        type: 'POST',
-                        data: submissionFormData,
-                        processData: false,
-                        contentType: false,
-                        success: function(submissionResponse) {
-                            console.log('Submission saved:', submissionResponse);
-                            const submissionResult = JSON.parse(submissionResponse);
-                            if (!submissionResult.success) {
-                                console.error('Submission error:', submissionResult.message);
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Submission AJAX error:', xhr.responseText, status, error);
-                        }
-                    });
-                } else {
-                    $('#outputPanel').text(output).addClass('text-danger');
-                }
-            } catch (e) {
-                console.error('Parse error:', e, 'Raw response:', responseText);
-                $('#outputPanel').text('Error: Invalid response from server - ' + responseText).addClass('text-danger');
+            if (timeLeft <= 0) {
+                $('#outputPanel').text('Time’s up! No further submissions allowed.');
+                return;
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('AJAX error:', xhr.responseText, status, error);
-            $('#outputPanel').text('Error evaluating code: ' + error).addClass('text-danger');
-        }
-    });
-});
+            const code = editor.getValue();
+            const language = $('#languageSelect').val();
+            const questionId = $('#questionSelect').val() || 1;
+
+            let formData = new FormData();
+            formData.append('code', code);
+            formData.append('language', language);
+            formData.append('question_id', questionId);
+
+            $.ajax({
+                url: 'api/evaluate_code.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(responseText) {
+                    console.log('Raw response:', responseText);
+                    try {
+                        if (typeof responseText !== 'string') {
+                            responseText = JSON.stringify(responseText);
+                        }
+                        const result = JSON.parse(responseText);
+                        let output = `Output: ${result.output || 'No output'}\nMessage: ${result.message || 'No message'}`;
+                        if (result.success) {
+                            const usesLogic = checkLogic(code, language);
+                            if (!usesLogic) {
+                                output += '\nWarning: Code appears to use hardcoded output or lacks logical implementation.';
+                            }
+                            $('#outputPanel').text(output).removeClass('text-danger');
+
+                            let submissionFormData = new FormData();
+                            submissionFormData.append('code', code);
+                            submissionFormData.append('language', language);
+                            submissionFormData.append('question_id', questionId);
+                            submissionFormData.append('output', result.output || '');
+
+                            $.ajax({
+                                url: 'api/save_submission.php',
+                                type: 'POST',
+                                data: submissionFormData,
+                                processData: false,
+                                contentType: false,
+                                success: function(submissionResponse) {
+                                    console.log('Submission saved:', submissionResponse);
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Submission AJAX error:', status, error);
+                                }
+                            });
+                        } else {
+                            $('#outputPanel').text(output).addClass('text-danger');
+                        }
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                        $('#outputPanel').text('Error: Invalid response from server').addClass('text-danger');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    $('#outputPanel').text('Error evaluating code: ' + error).addClass('text-danger');
+                }
+            });
+        });
 
         function checkLogic(code, language) {
             code = code.toLowerCase().trim();
@@ -284,7 +324,6 @@
             window.location.href = 'code_answers.php?language=' + encodeURIComponent(language);
         }
 
-        // Initial fetch of questions (default to C)
         fetchQuestions();
     </script>
 </body>
