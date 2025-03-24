@@ -265,7 +265,7 @@
                             <strong>Let's compile</strong>
                         </a>
                         <!-- <a id="sign-up" class="button is-light" href="profile.php">Go to profile</a> -->
-                        <a id="sign-up" class="button is-light" href="feedback.php">Feedback</a>
+                        <a id="sign-up" class="button is-light" href="review.php">Feedback</a>
 
                         <a id="sign-up" class="button is-light" href="logout.php">Logout</a>
                      
@@ -319,4 +319,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
