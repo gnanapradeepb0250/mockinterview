@@ -174,7 +174,7 @@
         const submitBtn = document.getElementById('submitReview');
         const feedbackMessage = document.getElementById('feedbackMessage');
         let rating = 0;
-
+        
         stars.forEach(star => {
             star.addEventListener('mouseover', function() {
                 const value = parseInt(this.getAttribute('data-value'));
@@ -189,7 +189,7 @@
                 resetStars();
                 for (let i = 0; i < rating; i++) {
                     stars[i].classList.add('selected');
-                }
+                }   
             });
 
             star.addEventListener('mouseleave', function() {
