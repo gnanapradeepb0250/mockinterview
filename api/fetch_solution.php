@@ -1,45 +1,60 @@
 <?php
+// api/fetch_solutions.php
 session_start();
-
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'You must log in first.']);
-    exit;
+    die(json_encode(['error' => 'User not logged in']));
 }
 
-include('db.php'); 
+$conn = mysqli_connect("localhost", "root", "1234", "mock_interview");
 
-// Get the logged-in user ID
+if (!$conn) {
+    die(json_encode(['error' => 'Connection failed: ' . mysqli_connect_error()]));
+}
+
 $user_id = $_SESSION['user_id'];
 
-$sql = "SELECT `feedback`, `score` FROM `user_answers` WHERE `user_id` = ?";
-$stmt = $conn->prepare($sql);
+// Fetch the most recent test attempt for this user
+$query = "SELECT ua.*, sq.question, sq.options 
+          FROM user_answer ua 
+          JOIN skills_questions sq ON ua.question_id = sq.id 
+          WHERE ua.user_id = $user_id 
+          AND ua.test_date = (
+              SELECT MAX(test_date) 
+              FROM user_answer
+              WHERE user_id = $user_id
+          )";
+$result = mysqli_query($conn, $query);
 
-if (!$stmt) {
-    echo json_encode(['error' => 'Error preparing SQL: ' . $conn->error]);
-    exit;
+if (!$result) {
+    die(json_encode(['error' => 'Query failed: ' . mysqli_error($conn)]));
 }
-
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
 
 $answers = [];
+$total_score = 0;
+$total_questions = 0;
 
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        // Determine result based on score
-        $row['result'] = ($row['score'] >= 50) ? 'Pass' : 'Fail';
-        $answers[] = $row;
-    }
-} else {
-    echo json_encode(['message' => 'No answers found.', 'score' => 0]);
-    exit;
+while ($row = mysqli_fetch_assoc($result)) {
+    $options = json_decode($row['options'], true);
+    $total_score += $row['score'];
+    $total_questions++;
+    
+    $answers[] = [
+        'question' => $row['question'],
+        'user_answer' => $row['user_answer'],
+        'correct_answer' => $row['correct_answer'],
+        'options' => $options,
+        'score' => $row['score'],
+        'category' => $row['category'],
+        'skill' => $row['skill']
+    ];
 }
 
-header('Content-Type: application/json');
-echo json_encode($answers);
-$stmt->close();
-$conn->close();
+$response = [
+    'answers' => $answers,
+    'total_score' => $total_score,
+    'total_questions' => $total_questions
+];
+
+echo json_encode($response);
+mysqli_close($conn);
 ?>

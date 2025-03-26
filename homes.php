@@ -258,7 +258,7 @@
             <div class="navbar-end">
                 <div id="sign" class="navbar-item">
                     <div class="buttons">
-                        <a id="sign-up" class="button is-primary" href="tech.php">
+                        <a id="sign-up" class="button is-primary" href="mcq.php">
                             <strong>Start Practice!</strong>
                         </a>
                         <a id="sign-up" class="button is-primary" href="compile.php">

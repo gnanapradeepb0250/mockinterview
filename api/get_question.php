@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$conn = new mysqli('localhost', 'root', '', 'mock_interview');
+$conn = new mysqli('localhost', 'root', '1234', 'mock_interview');
 if ($conn->connect_error) {
     die(json_encode(['error' => 'Database connection failed']));
 }
