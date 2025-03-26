@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>User Profile - Mock Interview</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -53,28 +54,6 @@
             word-break: break-word;
         }
 
-        .error-message {
-            color: red;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .retry-btn {
-            display: none;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .retry-btn:hover {
-            background: #b02a37;
-        }
-
         a {
             display: inline-block;
             margin-top: 20px;
@@ -100,7 +79,7 @@
                 max-width: 100%;
             }
 
-            a, .retry-btn {
+            a {
                 width: 100%;
                 text-align: center;
             }
@@ -149,57 +128,50 @@
             <label>Joined On:</label>
             <span id="created-at">Loading...</span>
         </div>
-
-        <p id="error-message" class="error-message"></p>
-        <button id="retry-btn" class="retry-btn" onclick="fetchUserProfile()">Retry</button>
-
         <a href="dashboard.php">Back to Dashboard</a>
     </div>
 
     <script>
-        async function fetchUserProfile() {
-            const errorMsg = document.getElementById('error-message');
-            const retryBtn = document.getElementById('retry-btn');
-            errorMsg.style.display = 'none';
-            retryBtn.style.display = 'none';
+        // Fetch user profile data when the page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/mockinterview/profile.php?action=get_profile')
+                .then(response => {
+                    console.log('Fetch response status:', response.status, response.statusText);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Network response was not ok: ${response.status} ${response.statusText} - ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch response data:', data);
+                    if (data.success) {
+                        const user = data.user;
 
-            try {
-                const response = await fetch('/repo/mockinterview/profile.php?action=get_profile');
-
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const user = data.user;
-                    document.getElementById('first-name').textContent = user.first_name || 'N/A';
-                    document.getElementById('last-name').textContent = user.last_name || 'N/A';
-                    document.getElementById('email').textContent = user.email || 'N/A';
-                    document.getElementById('mobile').textContent = user.mobile || 'N/A';
-                    document.getElementById('location').textContent = user.location || 'N/A';
-                    document.getElementById('created-at').textContent = user.created_at || 'N/A';
-                } else {
-                    showError(data.error || 'Failed to load user data');
-                }
-            } catch (error) {
-                showError(error.message);
-            }
-        }
-
-        function showError(message) {
-            console.error('Profile Fetch Error:', message);
-            document.getElementById('error-message').textContent = `Error: ${message}`;
-            document.getElementById('error-message').style.display = 'block';
-            document.getElementById('retry-btn').style.display = 'inline-block';
-
-            document.querySelectorAll('.field span').forEach(span => {
-                span.textContent = 'Error loading data';
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', fetchUserProfile);
+                        // Update user details
+                        document.getElementById('first-name').textContent = user.first_name || 'N/A';
+                        document.getElementById('last-name').textContent = user.last_name || 'N/A';
+                        document.getElementById('email').textContent = user.email || 'N/A';
+                        document.getElementById('mobile').textContent = user.mobile || 'N/A';
+                        document.getElementById('location').textContent = user.location || 'N/A';
+                        document.getElementById('created-at').textContent = user.created_at || 'N/A';
+                    } else {
+                        console.error('Fetch error response:', data.error);
+                        alert('Error: ' + data.error);
+                        document.querySelectorAll('.field span').forEach(span => {
+                            span.textContent = 'Error loading data';
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching profile:', error.message);
+                    alert('Failed to load profile data: ' + error.message);
+                    document.querySelectorAll('.field span').forEach(span => {
+                        span.textContent = 'Error loading data';
+                    });
+                });
+        });
     </script>
 </body>
 </html>
