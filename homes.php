@@ -281,7 +281,7 @@
         <!-- Left: Image Section -->
         <div class="image-section">
             <img src="images/home1.png" alt="Mock Interview Portal">
-        </div>
+        </div> 
 
         <!-- Right: Text Section -->
         <div class="text-section">
