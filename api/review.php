@@ -1,9 +1,10 @@
 <?php
+// api/review.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 header('Content-Type: application/json');
-include('db.php');
+include('db.php'); // Ensure this file establishes $conn (mysqli connection)
 
 session_start();
 
@@ -30,7 +31,7 @@ $user_id = $_SESSION['user_id'];
 $rating = filter_var($data['rating'], FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1, 'max_range' => 5]
 ]);
-$review = filter_var($data['review'] ?? '', FILTER_SANITIZE_STRING);
+$review = isset($data['review']) ? filter_var($data['review'], FILTER_SANITIZE_STRING) : '';
 
 if ($rating === false) {
     http_response_code(400);
@@ -38,7 +39,7 @@ if ($rating === false) {
     exit;
 }
 
-// Check for recent review (rate limiting)
+// Rate limiting: Check for recent review (within 24 hours)
 $stmt = $conn->prepare("SELECT COUNT(*) FROM reviews WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();

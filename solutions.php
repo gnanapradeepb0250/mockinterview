@@ -7,22 +7,69 @@ if (!isset($_SESSION['user_id'])) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Solutions</title>
+
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    
+    <!-- FontAwesome for Icons -->
+    <script src="https://kit.fontawesome.com/e690f7b4b8.js" crossorigin="anonymous"></script>
+
     <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            font-family: Arial, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
+        }
+
+        #navigation {
+            background-color: #fff;
+            height: 77px;
+            box-shadow: none;
+        }
+
+        .navbar-item:hover,
+        .navbar-link:hover {
+            color: rgb(17, 102, 230);
+            box-shadow: 1px 1px 5px rgba(9, 28, 58, 0.452);
+            border-radius: 9px;
+        }
+
+        .navbar-item {
+            margin: 2%;
+        }
+
+        .navbar-link {
+            border-radius: 0;
+        }
+
+        #logo:hover {
+            box-shadow: none;
+        }
+
+        .btn-custom:hover {
+            box-shadow: inset -6px -6px 10px 0 rgba(49, 48, 48, 0.5), 
+                        inset 6px 6px 10px 0 rgba(255, 255, 255, 0.829);
+        }
+
+        .navbar-item img {
+            height: 65px;
+            width: 80px;
+            max-height: 3.2rem;
         }
 
         h2, h3 {
@@ -59,7 +106,7 @@ if (!isset($_SESSION['user_id'])) {
             border-radius: 5px;
         }
 
-        a {
+        a.back-to-dashboard {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
@@ -70,8 +117,16 @@ if (!isset($_SESSION['user_id'])) {
             transition: background 0.3s;
         }
 
-        a:hover {
+        a.back-to-dashboard:hover {
             background: #0056b3;
+        }
+
+        /* Responsive Adjustments */
+        @media screen and (max-width: 1000px) {
+            .navbar-menu {
+                background-color: #fff;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            }
         }
 
         @media (max-width: 768px) {
@@ -95,7 +150,7 @@ if (!isset($_SESSION['user_id'])) {
                 font-size: 0.95em;
             }
 
-            a {
+            a.back-to-dashboard {
                 width: 100%;
                 text-align: center;
             }
@@ -116,20 +171,67 @@ if (!isset($_SESSION['user_id'])) {
                 margin-top: 5px;
             }
 
-            a {
+            a.back-to-dashboard {
                 padding: 8px 15px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar" role="navigation" id="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" id="logo" href="dashboard.php">
+                <img src="images/logo.png" alt="Logo">
+            </a>
+
+            <!-- Mobile Navbar Toggle -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <!-- Navbar Menu -->
+        <div id="navbarMenu" class="navbar-menu">
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-primary btn-custom" href="mcq.php"><strong>Take a Test</strong></a>
+                        <a class="button is-light btn-custom" href="homes.php">go home</a>
+                        <a class="button is-light btn-custom" href="support.php">Need Support</a>
+                        <a class="button is-light btn-custom" href="review.php">Feedback</a>
+                        <a class="button is-light btn-custom" href="logout.php">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Solutions Content -->
     <h2>Test Solutions</h2>
     <div id="solutions-container"></div>
     <div id="summary"></div>
-    <p><a href="dashboard.php">Go to Dashboard</a></p>
+    <p><a href="dashboard.php" class="back-to-dashboard">Go to Dashboard</a></p>
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Navbar Toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const burger = document.querySelector('.navbar-burger');
+            const menu = document.querySelector('.navbar-menu');
+
+            if (burger && menu) {
+                burger.addEventListener('click', () => {
+                    burger.classList.toggle('is-active');
+                    menu.classList.toggle('is-active');
+                });
+            }
+        });
+
+        // Solutions Fetch
         $(document).ready(function() {
             $.ajax({
                 url: 'api/fetch_solution.php',
