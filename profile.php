@@ -3,175 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Mock Interview</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>User Profile</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #e0c3fc, #8ec5fc);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
         .profile-container {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-
-        .field {
-            margin: 15px 0;
-            text-align: left;
+        .profile-field {
+            margin: 10px 0;
         }
-
-        .field label {
+        .profile-field label {
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-        }
-
-        .field span {
-            display: block;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-            word-break: break-word;
-        }
-
-        a {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
+            width: 120px;
         }
-
-        a:hover {
-            background: #0056b3;
+        .loading {
+            text-align: center;
+            display: none;
         }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .profile-container {
-                padding: 20px;
-                max-width: 100%;
-            }
-
-            a {
-                width: 100%;
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .profile-container {
-                padding: 15px;
-            }
-
-            .field {
-                margin: 10px 0;
-            }
-
-            .field span {
-                padding: 8px;
-                font-size: 0.9em;
-            }
+        .error {
+            color: red;
+            text-align: center;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="profile-container">
         <h2>User Profile</h2>
-        <div class="field">
+        <div class="loading">Loading...</div>
+        <div class="error"></div>
+        <div class="profile-field">
             <label>First Name:</label>
-            <span id="first-name">Loading...</span>
+            <span id="first_name"></span>
         </div>
-        <div class="field">
+        <div class="profile-field">
             <label>Last Name:</label>
-            <span id="last-name">Loading...</span>
+            <span id="last_name"></span>
         </div>
-        <div class="field">
+        <div class="profile-field">
             <label>Email:</label>
-            <span id="email">Loading...</span>
+            <span id="email"></span>
         </div>
-        <div class="field">
-            <label>Mobile:</label>
-            <span id="mobile">Loading...</span>
+        <div class="profile-field">
+            <label>Phone:</label>
+            <span id="phone"></span>
         </div>
-        <div class="field">
-            <label>Location:</label>
-            <span id="location">Loading...</span>
+        <div class="profile-field">
+            <label>Address:</label>
+            <span id="address"></span>
         </div>
-        <div class="field">
-            <label>Joined On:</label>
-            <span id="created-at">Loading...</span>
-        </div>
-        <a href="dashboard.php">Back to Dashboard</a>
     </div>
 
     <script>
-        // Fetch user profile data when the page loads
-        document.addEventListener('DOMContentLoaded', function () {
-            fetch('/mockinterview/profile.php?action=get_profile')
-                .then(response => {
-                    console.log('Fetch response status:', response.status, response.statusText);
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            throw new Error(`Network response was not ok: ${response.status} ${response.statusText} - ${text}`);
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Fetch response data:', data);
-                    if (data.success) {
-                        const user = data.user;
-
-                        // Update user details
-                        document.getElementById('first-name').textContent = user.first_name || 'N/A';
-                        document.getElementById('last-name').textContent = user.last_name || 'N/A';
-                        document.getElementById('email').textContent = user.email || 'N/A';
-                        document.getElementById('mobile').textContent = user.mobile || 'N/A';
-                        document.getElementById('location').textContent = user.location || 'N/A';
-                        document.getElementById('created-at').textContent = user.created_at || 'N/A';
-                    } else {
-                        console.error('Fetch error response:', data.error);
-                        alert('Error: ' + data.error);
-                        document.querySelectorAll('.field span').forEach(span => {
-                            span.textContent = 'Error loading data';
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching profile:', error.message);
-                    alert('Failed to load profile data: ' + error.message);
-                    document.querySelectorAll('.field span').forEach(span => {
-                        span.textContent = 'Error loading data';
-                    });
-                });
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
         });
+
+        function loadUserProfile() {
+            const loading = document.querySelector('.loading');
+            const error = document.querySelector('.error');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'get_profile.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                loading.style.display = 'none';
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            document.getElementById('first_name').textContent = response.data.first_name;
+                            document.getElementById('last_name').textContent = response.data.last_name;
+                            document.getElementById('email').textContent = response.data.email;
+                            document.getElementById('phone').textContent = response.data.phone;
+                            document.getElementById('address').textContent = response.data.address;
+                        } else {
+                            error.textContent = response.message;
+                            error.style.display = 'block';
+                        }
+                    } catch (e) {
+                        error.textContent = 'Error processing response';
+                        error.style.display = 'block';
+                    }
+                } else {
+                    error.textContent = 'Server error occurred';
+                    error.style.display = 'block';
+                }
+            };
+            xhr.onerror = function() {
+                loading.style.display = 'none';
+                error.textContent = 'Network error occurred';
+                error.style.display = 'block';
+            };
+            const userId = 1; 
+            xhr.send('user_id=' + encodeURIComponent(userId));
+        }
     </script>
 </body>
 </html>
